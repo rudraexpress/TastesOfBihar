@@ -12,6 +12,8 @@ import {
   recordWastage,
 } from "../api/inventory";
 import { listProducts } from "../api/products";
+import ProductInventoryTable from "../components/ProductInventoryTable";
+import IngredientsInventoryTable from "../components/IngredientsInventoryTable";
 
 // Small metric display
 function Metric({ label, value, emphasize }) {
@@ -156,58 +158,6 @@ export default function Inventory() {
     });
     return { material, product };
   }, [wastage]);
-
-  // Overview combined rows
-  const overviewRows = useMemo(() => {
-    const rows = [];
-    materials.forEach((m) => {
-      rows.push({
-        key: "mat-" + m.id,
-        type: "Material",
-        name: m.name,
-        qty: m.quantityGrams || 0,
-        unit: "g",
-        avgCost: m.avgCostPerGram || 0,
-        value: (m.quantityGrams || 0) * (m.avgCostPerGram || 0),
-        wastage: wastageAgg.material[m.id] || 0,
-      });
-    });
-    products.forEach((p) => {
-      rows.push({
-        key: "prod-" + p.id,
-        type: "Product",
-        name: p.name,
-        qty: p.stock ?? 0,
-        unit: "pcs",
-        avgCost: null, // not tracked at product level yet
-        value: null, // value calculation for finished goods not implemented
-        wastage: wastageAgg.product[p.id] || 0,
-      });
-    });
-    return rows;
-  }, [materials, products, wastageAgg]);
-
-  const totalMaterialValue = useMemo(
-    () =>
-      overviewRows
-        .filter((r) => r.type === "Material")
-        .reduce((s, r) => s + r.value, 0),
-    [overviewRows]
-  );
-  const totalMaterialWastage = useMemo(
-    () =>
-      overviewRows
-        .filter((r) => r.type === "Material")
-        .reduce((s, r) => s + r.wastage, 0),
-    [overviewRows]
-  );
-  const totalProductWastage = useMemo(
-    () =>
-      overviewRows
-        .filter((r) => r.type === "Product")
-        .reduce((s, r) => s + r.wastage, 0),
-    [overviewRows]
-  );
 
   // Production preview
   const recipePreview = useMemo(() => {
@@ -392,100 +342,21 @@ export default function Inventory() {
       {/* Overview Tab */}
       {tab === "overview" && (
         <section style={{ marginTop: "1rem" }}>
-          <div className="customer-info" style={{ padding: "1.2rem" }}>
-            <h2 style={{ margin: "0 0 .6rem" }}>Inventory Overview</h2>
-            <table className="customer">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Name</th>
-                  <th>Qty</th>
-                  <th>Unit</th>
-                  <th>Avg Cost / kg</th>
-                  <th>Value (₹)</th>
-                  <th>Wastage (kg)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {overviewRows.map((r) => (
-                  <tr key={r.key}>
-                    <td>{r.type}</td>
-                    <td style={{ textAlign: "left" }}>{r.name}</td>
-                    <td>
-                      {r.type === "Material"
-                        ? (r.qty / 1000).toFixed(2)
-                        : r.qty.toFixed(2)}
-                    </td>
-                    <td>{r.unit}</td>
-                    <td>
-                      {r.type === "Material"
-                        ? (r.avgCost * 1000).toFixed(2)
-                        : "-"}
-                    </td>
-                    <td>{r.type === "Material" ? r.value.toFixed(2) : "-"}</td>
-                    <td>{r.wastage ? (r.wastage / 1000).toFixed(2) : "-"}</td>
-                  </tr>
-                ))}
-                {!overviewRows.length && (
-                  <tr>
-                    <td colSpan={7}>No data</td>
-                  </tr>
-                )}
-              </tbody>
-              <tfoot>
-                <tr style={{ background: "var(--color-light)" }}>
-                  <td
-                    colSpan={2}
-                    style={{ textAlign: "right", fontWeight: 600 }}
-                  >
-                    Totals (Materials)
-                  </td>
-                  <td colSpan={2} style={{ fontWeight: 600 }}>
-                    {(
-                      materials.reduce(
-                        (s, m) => s + (m.quantityGrams || 0),
-                        0
-                      ) / 1000
-                    ).toFixed(2)}{" "}
-                    kg
-                  </td>
-                  <td></td>
-                  <td style={{ fontWeight: 600 }}>
-                    ₹{totalMaterialValue.toFixed(2)}
-                  </td>
-                  <td style={{ fontWeight: 600 }}>
-                    {(totalMaterialWastage / 1000).toFixed(2)}
-                  </td>
-                </tr>
-                <tr style={{ background: "var(--color-light)" }}>
-                  <td
-                    colSpan={2}
-                    style={{ textAlign: "right", fontWeight: 600 }}
-                  >
-                    Totals (Products)
-                  </td>
-                  <td colSpan={2} style={{ fontWeight: 600 }}>
-                    {products.reduce((s, p) => s + (p.stock || 0), 0)}
-                  </td>
-                  <td></td>
-                  <td style={{ fontWeight: 600 }}>-</td>
-                  <td style={{ fontWeight: 600 }}>
-                    {totalProductWastage.toFixed(2)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-            <p
-              style={{
-                fontSize: ".65rem",
-                opacity: 0.7,
-                marginTop: ".6rem",
-                textAlign: "left",
-              }}
-            >
-              Note: Product average cost & value not yet implemented; only raw
-              material weighted average & value shown.
-            </p>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
+          >
+            {/* Ingredients Inventory Table */}
+            <IngredientsInventoryTable
+              materials={materials}
+              wastageAgg={wastageAgg}
+              lowStockItems={low}
+            />
+
+            {/* Product Inventory Table */}
+            <ProductInventoryTable
+              products={products}
+              wastageAgg={wastageAgg}
+            />
           </div>
         </section>
       )}

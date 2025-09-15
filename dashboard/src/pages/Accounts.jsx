@@ -525,115 +525,160 @@ export default function Accounts() {
 
       {tab === "expenses" && (
         <div style={{ marginTop: "1rem" }}>
-          <h2 style={{ margin: "0 0 .5rem" }}>Add Expense</h2>
-          <form onSubmit={submitExpense} style={formGrid}>
-            <select
-              value={expenseForm.category}
-              onChange={(e) => changeExpenseField("category", e.target.value)}
-              style={input}
+          <h2 style={{ margin: "0 0 .5rem", textAlign: "center" }}>
+            Add Expense
+          </h2>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              width: "100%",
+            }}
+          >
+            <form
+              onSubmit={submitExpense}
+              style={{
+                ...formGrid,
+                margin: "0 auto",
+                width: "100%",
+                maxWidth: "600px",
+              }}
             >
-              <option value="advertising">Advertising</option>
-              <option value="utilities">Utilities</option>
-              <option value="rent">Rent</option>
-              <option value="other">Other</option>
-            </select>
-            <input
-              placeholder="Description"
-              value={expenseForm.description}
-              onChange={(e) =>
-                changeExpenseField("description", e.target.value)
-              }
-              required
-              style={input}
-            />
-            <input
-              type="number"
-              placeholder="Base Amount"
-              value={expenseForm.baseAmount}
-              onChange={(e) => changeExpenseField("baseAmount", e.target.value)}
-              required
-              style={input}
-            />
-            <div style={{ display: "flex", gap: ".5rem" }}>
+              <select
+                value={expenseForm.category}
+                onChange={(e) => changeExpenseField("category", e.target.value)}
+                style={input}
+              >
+                <option value="advertising">Advertising</option>
+                <option value="utilities">Utilities</option>
+                <option value="rent">Rent</option>
+                <option value="other">Other</option>
+              </select>
               <input
-                type="number"
-                placeholder="SGST %"
-                value={expenseForm.sgstRate}
-                onChange={(e) => changeExpenseField("sgstRate", e.target.value)}
-                style={{ ...input, flex: 1 }}
+                placeholder="Description"
+                value={expenseForm.description}
+                onChange={(e) =>
+                  changeExpenseField("description", e.target.value)
+                }
+                required
+                style={input}
               />
               <input
                 type="number"
-                placeholder="CGST %"
-                value={expenseForm.cgstRate}
-                onChange={(e) => changeExpenseField("cgstRate", e.target.value)}
-                style={{ ...input, flex: 1 }}
+                placeholder="Base Amount"
+                value={expenseForm.baseAmount}
+                onChange={(e) =>
+                  changeExpenseField("baseAmount", e.target.value)
+                }
+                required
+                style={input}
+              />
+              <div style={{ display: "flex", gap: ".5rem" }}>
+                <input
+                  type="number"
+                  placeholder="SGST %"
+                  value={expenseForm.sgstRate}
+                  onChange={(e) =>
+                    changeExpenseField("sgstRate", e.target.value)
+                  }
+                  style={{ ...input, flex: 1 }}
+                />
+                <input
+                  type="number"
+                  placeholder="CGST %"
+                  value={expenseForm.cgstRate}
+                  onChange={(e) =>
+                    changeExpenseField("cgstRate", e.target.value)
+                  }
+                  style={{ ...input, flex: 1 }}
+                />
+                <input
+                  type="number"
+                  placeholder="IGST %"
+                  value={expenseForm.igstRate}
+                  onChange={(e) =>
+                    changeExpenseField("igstRate", e.target.value)
+                  }
+                  style={{ ...input, flex: 1 }}
+                />
+              </div>
+              <textarea
+                placeholder="Notes"
+                value={expenseForm.notes}
+                onChange={(e) => changeExpenseField("notes", e.target.value)}
+                style={{ ...input, resize: "vertical" }}
               />
               <input
-                type="number"
-                placeholder="IGST %"
-                value={expenseForm.igstRate}
-                onChange={(e) => changeExpenseField("igstRate", e.target.value)}
-                style={{ ...input, flex: 1 }}
+                type="file"
+                onChange={(e) =>
+                  changeExpenseField("invoice", e.target.files[0])
+                }
               />
-            </div>
-            <textarea
-              placeholder="Notes"
-              value={expenseForm.notes}
-              onChange={(e) => changeExpenseField("notes", e.target.value)}
-              style={{ ...input, resize: "vertical" }}
-            />
-            <input
-              type="file"
-              onChange={(e) => changeExpenseField("invoice", e.target.files[0])}
-            />
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button type="submit" style={btnPrimary}>
-                Save Expense
-              </button>
-            </div>
-          </form>
-          <h2 style={{ margin: "2rem 0 .5rem" }}>Recent Expenses</h2>
-          <div className="customer-info">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Category</th>
-                  <th>Description</th>
-                  <th>Total</th>
-                  <th>GST</th>
-                  <th>Invoice</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses.map((x) => (
-                  <tr key={x.id}>
-                    <td>{new Date(x.createdAt).toLocaleDateString()}</td>
-                    <td>{x.category}</td>
-                    <td style={{ textAlign: "left", maxWidth: "260px" }}>
-                      {x.description}
-                    </td>
-                    <td>₹{x.amount.toFixed(2)}</td>
-                    <td>₹{(x.sgst + x.cgst + x.igst).toFixed(2)}</td>
-                    <td>
-                      {x.invoiceFile ? (
-                        <a href={x.invoiceFile} target="_blank">
-                          View
-                        </a>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {!expenses.length && (
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <button type="submit" style={btnPrimary}>
+                  Save Expense
+                </button>
+              </div>
+            </form>
+          </div>
+          <h2 style={{ margin: "2rem 0 .5rem", textAlign: "center" }}>
+            Recent Expenses
+          </h2>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              width: "100%",
+            }}
+          >
+            <div
+              className="customer-info"
+              style={{
+                width: "100%",
+                maxWidth: "800px",
+              }}
+            >
+              <table>
+                <thead>
                   <tr>
-                    <td colSpan={6}>No expenses</td>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Total</th>
+                    <th>GST</th>
+                    <th>Invoice</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {expenses.map((x) => (
+                    <tr key={x.id}>
+                      <td>{new Date(x.createdAt).toLocaleDateString()}</td>
+                      <td>{x.category}</td>
+                      <td style={{ textAlign: "left", maxWidth: "260px" }}>
+                        {x.description}
+                      </td>
+                      <td>₹{x.amount.toFixed(2)}</td>
+                      <td>₹{(x.sgst + x.cgst + x.igst).toFixed(2)}</td>
+                      <td>
+                        {x.invoiceFile ? (
+                          <a href={x.invoiceFile} target="_blank">
+                            View
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {!expenses.length && (
+                    <tr>
+                      <td colSpan={6}>No expenses</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
