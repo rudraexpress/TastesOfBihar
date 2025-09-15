@@ -1,0 +1,1418 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+:root {
+  --color-primary: #9d73ec;
+  --color-danger: #fa2032;
+  --color-success: #41f1b6;
+  --color-warning: #ffbb55;
+  --color-brand-bihar: #8b4513; /* rich brown similar to logo accent */
+  --color-white: #fff;
+  --color-muted: #7d8da1;
+  --color-dark: #363949;
+  --color-light: rgba(112, 121, 201, 0.18);
+  --color-para: #677483;
+  --color-background: #e2e2e2;
+  --card-border-radius: 2rem;
+  --border-radius-1: 0.4rem;
+  --border-radius-2: 0.8rem;
+  --border-radius-3: 1.2rem;
+
+  --card-padding: 1.8rem;
+  --padding-1: 1.2rem;
+
+  /* Tightened shadow: reduced vertical & blur for less horizontal spread */
+  --box-shadow: 0 1rem 1.6rem -0.6rem rgba(0, 0, 0, 0.18);
+  /* Elevation system tokens */
+  --elev-base: 0 4px 10px -6px rgba(0, 0, 0, 0.18);
+  --elev-hover: 0 10px 22px -10px rgba(0, 0, 0, 0.28);
+  --elev-strong: 0 14px 28px -14px rgba(0, 0, 0, 0.32);
+}
+/*-------------------Dark Theme Varaibles--------------------*/
+.dark-theme-variables {
+  --color-background: #181a1e;
+  --color-white: #202528;
+  --color-dark: #edeffd;
+  --color-dark-varient: #a3bdcc;
+  --color-light: rgba(0, 0, 0, 0.4);
+  --box-shadow: 0 2rem 3rem var(--color-light);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  outline: 0;
+  appearance: none;
+  border: 0;
+  text-decoration: none;
+  list-style: none;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  font-family: poppins, sans-serif;
+  background: var(--color-background);
+  user-select: none;
+  overflow: hidden; /* prevent body/page scroll; we'll scroll only main */
+  color: var(--color-dark);
+}
+
+.container {
+  display: grid;
+  width: 96%;
+  margin: 0 auto;
+  gap: 1.8rem;
+  grid-template-columns: 14rem auto 23rem;
+  height: 100vh; /* occupy full viewport */
+  transition: grid-template-columns 300ms ease; /* smooth resize when collapsing right bar */
+}
+.container.right-collapsed {
+  grid-template-columns: 14rem auto; /* only sidebar + main */
+}
+
+/* Collapse / Expand button styles */
+.collapse-right-btn,
+.expand-right-btn {
+  background: var(--color-light);
+  border-radius: 50%;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-dark);
+  box-shadow: var(--elev-base);
+  transition: background 160ms ease, transform 160ms ease, color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.collapse-right-btn:hover,
+.expand-right-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--elev-hover);
+}
+
+.collapse-right-btn:active,
+.expand-right-btn:active {
+  transform: scale(0.92);
+}
+
+.collapse-right-btn:focus-visible,
+.expand-right-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+/* Specific positioning adjustments */
+.right .collapse-right-btn {
+  margin-right: auto; /* push other top items to the right, button sits at left of right bar */
+}
+
+/* When collapsed, show a floating expand button at screen edge */
+.expand-right-btn {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  box-shadow: var(--elev-base);
+}
+
+/* Dark theme adjustments (inherit colors but keep accessible contrast) */
+body.dark-theme-variables .collapse-right-btn,
+body.dark-theme-variables .expand-right-btn {
+  background: var(--color-light);
+  color: var(--color-dark);
+}
+body.dark-theme-variables .collapse-right-btn:hover,
+body.dark-theme-variables .expand-right-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+a {
+  color: var(--color-dark);
+}
+img {
+  display: block;
+  width: 100%;
+}
+h1 {
+  font-weight: 800;
+  font-size: 1.8rem;
+}
+h2 {
+  font-size: 1.4rem;
+}
+h3 {
+  font-size: 0.87rem;
+}
+h4 {
+  font-size: 0.8rem;
+}
+h5 {
+  font-size: 0.77rem;
+}
+
+small {
+  font-size: 0.75rem;
+}
+
+.profile-photo {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.text-muted {
+  color: var(--color-muted);
+}
+
+p {
+  color: var(--color-para);
+}
+
+b {
+  color: var(--color-dark);
+}
+
+/* ---------------- Dark theme readability adjustments --------------- */
+body.dark-theme-variables {
+  /* ensure base paragraph and generic text uses lighter high-contrast color */
+  color: var(--color-dark);
+}
+body.dark-theme-variables p,
+body.dark-theme-variables td,
+body.dark-theme-variables th,
+body.dark-theme-variables li,
+body.dark-theme-variables input,
+body.dark-theme-variables select,
+body.dark-theme-variables button,
+body.dark-theme-variables label,
+body.dark-theme-variables span {
+  color: var(--color-dark);
+}
+/* Muted text variant in dark mode – slightly desaturate */
+body.dark-theme-variables .text-muted {
+  color: var(--color-dark-varient);
+}
+
+/* Table backgrounds & stripes keep contrast */
+body.dark-theme-variables table {
+  background: var(--color-white);
+}
+
+/* Low stock highlight accessible both themes */
+tr.low-stock-row {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 102, 102, 0.18),
+    rgba(255, 102, 102, 0.05)
+  );
+}
+body.dark-theme-variables tr.low-stock-row {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 102, 102, 0.32),
+    rgba(255, 102, 102, 0.12)
+  );
+}
+
+/* Buttons in dark mode: inherit readable text */
+body.dark-theme-variables button {
+  color: var(--color-dark);
+}
+
+/* Inputs: ensure placeholder readable */
+body.dark-theme-variables input::placeholder,
+body.dark-theme-variables textarea::placeholder {
+  color: var(--color-dark-varient);
+  opacity: 0.75;
+}
+
+.primary {
+  color: var(--color-primary);
+}
+.danger {
+  color: var(--color-danger);
+}
+.brand-bihar {
+  color: var(--color-brand-bihar);
+}
+.success {
+  color: var(--color-success);
+}
+.warning {
+  color: var(--color-warning);
+}
+
+aside {
+  height: 100%;
+  position: sticky; /* remain in view */
+  top: 0;
+  align-self: start;
+  overflow: hidden; /* no internal scroll except sidebar list if needed */
+}
+
+aside .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.4rem;
+}
+
+aside .logo {
+  display: flex;
+  gap: 0.8rem;
+}
+
+aside .logo img {
+  width: 2rem;
+  height: 2rem;
+}
+aside .close {
+  display: none;
+}
+
+aside .sidebar {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 4.4rem); /* allow internal scroll area if overflow */
+  position: relative;
+  top: 3rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.4rem;
+}
+aside .sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+aside .sidebar::-webkit-scrollbar-thumb {
+  background: var(--color-light);
+  border-radius: 3px;
+}
+
+aside h3 {
+  font-weight: 500;
+}
+
+aside .sidebar a {
+  display: flex;
+  color: var(--color-muted);
+  margin-left: 2rem;
+  gap: 1rem;
+  align-items: center;
+  position: relative;
+  height: 3.7rem;
+  transition: all 300ms ease;
+}
+aside .sidebar a span {
+  font-size: 1.6rem;
+  transition: all 300ms ease;
+}
+aside .sidebar a:last-child {
+  position: absolute;
+  bottom: 2rem;
+  width: 100%;
+}
+
+aside .sidebar a.active {
+  background: var(--color-light);
+  color: var(--color-primary);
+  margin-left: 0;
+}
+
+aside .sidebar a.active:before {
+  content: "";
+  width: 6px;
+  height: 100%;
+  background: var(--color-primary);
+}
+
+aside .sidebar a.active span {
+  color: var(--color-primary);
+  margin-left: calc(1rem - 3px);
+}
+
+aside .sidebar a.active span.message-count {
+  background-color: #ffffff;
+  color: var(--color-primary);
+  margin-left: calc(1rem - 3px);
+}
+
+aside .sidebar a:hover {
+  color: var(--color-primary);
+}
+
+aside .sidebar a:hover span {
+  margin-left: 1rem;
+}
+
+aside .sidebar .message-count {
+  background-color: rgb(247, 117, 117);
+  color: var(--color-white);
+  padding: 2px 10px;
+  font-size: 11px;
+  border-radius: var(--border-radius-1);
+}
+
+/*  ==================== Main ==================== */
+main {
+  margin-top: 1.4rem;
+  overflow-y: auto; /* only scrollable column */
+  padding-right: 0.4rem;
+  height: calc(100vh - 1.4rem); /* prevent extra page scroll */
+  scroll-behavior: smooth;
+}
+/* Subtle slim scrollbar (visible but unobtrusive) */
+main::-webkit-scrollbar {
+  width: 6px;
+}
+main::-webkit-scrollbar-track {
+  background: transparent;
+}
+main::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+main::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+/* Firefox */
+main {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+main .date {
+  display: inline-block;
+  background: var(--color-light);
+  border-radius: var(--border-radius-1);
+  margin-top: 1rem;
+  padding: 0.5rem 1.6rem;
+}
+
+main .date input[type="date"] {
+  background: transparent;
+  color: var(--color-dark);
+}
+
+main .insights {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.6rem;
+}
+
+main .insights > div {
+  background: var(--color-white);
+  padding: var(--card-padding);
+  border-radius: var(--card-border-radius);
+  margin-top: 1rem;
+  box-shadow: var(--elev-base);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 240ms ease, transform 240ms ease, background 240ms ease;
+}
+main .insights > div:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 25% 20%,
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+main .insights > div:hover {
+  box-shadow: var(--elev-hover);
+  transform: translateY(-4px);
+}
+main .insights > div:hover:before {
+  opacity: 1;
+}
+
+/* ================= Analytics Page Cards & Panels ================= */
+.kpi-card {
+  background: var(--color-white);
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  box-shadow: var(--box-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: relative;
+  transition: box-shadow 240ms ease, transform 240ms ease, background 240ms ease;
+  will-change: transform, box-shadow;
+}
+.kpi-card:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 30% 25%,
+    rgba(255, 255, 255, 0.4),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px -10px rgba(0, 0, 0, 0.28);
+}
+.kpi-card:hover:before {
+  opacity: 1;
+}
+.kpi-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.kpi-title-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  opacity: 0.75;
+  display: inline-block;
+}
+.kpi-value {
+  margin: 0.3rem 0 0 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.kpi-trend {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.kpi-sub {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.4px;
+}
+
+/* Analytics panels (charts, tables) */
+.analytics-panel,
+#analytics-section .customer-info.analytics-panel {
+  /* allow applying class plus existing customer-info */
+  transition: box-shadow 260ms ease, transform 260ms ease,
+    border-color 260ms ease;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+.analytics-panel:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.32);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+.analytics-panel:after {
+  /* subtle gradient sheen */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0)
+  );
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+.analytics-panel:hover:after {
+  opacity: 1;
+}
+
+/* Layout helpers for analytics */
+.analytics-kpi-grid {
+  display: grid;
+  gap: 1.4rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.analytics-panels-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+}
+
+@media (max-width: 900px) {
+  .analytics-panels-grid {
+    grid-template-columns: 1fr;
+  }
+  .analytics-kpi-grid {
+    gap: 1rem;
+  }
+}
+
+main .insights > div span {
+  background: var(--color-primary);
+  padding: 0.5rem;
+  border-radius: 50%;
+  color: var(--color-white);
+  font-size: 2rem;
+}
+
+main .insights > div.expenses span {
+  background: var(--color-danger);
+}
+
+main .insights > div.income span {
+  background: var(--color-success);
+}
+
+main .insights > div .middle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+main .insights h3 {
+  margin: 1rem 0 0.6rem;
+  font-size: 1rem;
+}
+
+main .insights .progress {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+}
+
+main .insights svg {
+  width: 7rem;
+  height: 7rem;
+}
+
+/* Reset circle presentation so JS-driven attributes determine the arc */
+main .insights svg circle {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 10; /* visual thickness */
+  stroke-linecap: round;
+  transform: none; /* don't translate - rotation is handled in the SVG element */
+}
+
+/* removed hard-coded stroke-dasharray / stroke-dashoffset rules that conflicted with dynamic values */
+
+main .insights .sale svg circle {
+  stroke-dashoffset: -30;
+  stroke-dasharray: 200;
+}
+
+main .insights .expenses svg circle {
+  stroke-dashoffset: 20;
+  stroke-dasharray: 80;
+}
+
+main .insights .sale svg circle {
+  stroke-dashoffset: 35;
+  stroke-dasharray: 110;
+}
+
+main .insights .progress .number {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+main .insights small {
+  margin-top: 1.3rem;
+  display: block;
+}
+
+/* ==========================Recent Orders==========================*/
+main .recent-orders {
+  margin-top: 2rem;
+}
+
+main .recent-orders h2 {
+  margin-bottom: 0.8rem;
+}
+
+main .recent-orders table {
+  background: var(--color-white);
+  width: 100%;
+  border-radius: var(--card-border-radius);
+  padding: var(--card-padding);
+  text-align: center;
+  box-shadow: var(--box-shadow);
+  transition: all 300ms ease;
+}
+
+main .recent-orders table:hover {
+  box-shadow: none;
+}
+
+main table tbody td {
+  height: 2.8rem;
+  border-bottom: 1px solid var(--color-light);
+  color: var(--color-para);
+}
+
+main table tbody tr:last-child td {
+  border: none;
+}
+
+main .recent-orders a {
+  text-align: center;
+  display: block;
+  margin: 1rem auto;
+  color: var(--color-primary);
+}
+/* ======================Customers========================*/
+
+main .customer-info {
+  margin-top: 0;
+}
+
+main .customer-info h2 {
+  font-size: 2rem;
+  margin-bottom: 0;
+}
+
+main .filter {
+  position: relative;
+  justify-content: space-between;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+}
+main .filter .date {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+}
+main .filter .date p {
+  margin-top: 0.3rem;
+}
+main .input {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+main .filter input[type="date"] {
+  background: transparent;
+  color: var(--color-dark);
+}
+main .filter .inputquerry {
+  border-radius: var(--border-radius-1);
+  margin-top: 1rem;
+  padding: 0.5rem 1.6rem;
+  background: var(--color-light);
+}
+main .filter input[type="name"] {
+  background: transparent;
+  justify-content: center;
+  color: var(--color-dark);
+}
+
+main .filter input[type="email"] {
+  background: transparent;
+  color: var(--color-dark);
+}
+main .filter input[type="text"] {
+  background: transparent;
+  color: var(--color-dark);
+}
+main .filter button {
+  justify-self: flex-end;
+  border-radius: var(--border-radius-1);
+  border: 2px dashed var(--color-primary);
+  margin-top: 1rem;
+  padding: 0.5rem 1.6rem;
+  background: var(--color-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 300ms ease;
+}
+main .filter button:hover {
+  background: var(--color-primary);
+  cursor: pointer;
+  color: white;
+}
+main .customer-info table {
+  margin-top: 1rem;
+  background: var(--color-white);
+  width: 100%;
+  border-radius: var(--card-border-radius);
+  padding: var(--card-padding);
+  text-align: center;
+  box-shadow: var(--box-shadow);
+  transition: all 300ms ease;
+}
+
+main .customer-info table:hover {
+  box-shadow: none;
+}
+
+main .customer-info a {
+  text-align: center;
+  display: block;
+  margin: 1rem auto;
+  color: var(--color-primary);
+}
+
+/* ====================== Right ==========================*/
+
+.right {
+  position: sticky;
+  top: 0;
+  height: 100vh; /* occupy full viewport height */
+  margin-top: 0; /* align with top */
+  padding-top: 1rem; /* slightly reduced to fit content */
+  overflow: hidden; /* prevent scrolling */
+  display: flex;
+  flex-direction: column;
+}
+.right .recent-updates,
+.right .sales-analytics {
+  overflow: hidden; /* ensure children don't trigger scrollbars */
+}
+
+.right .top {
+  display: flex;
+  justify-content: end;
+  gap: 2rem;
+}
+
+/* Only hide the (currently unused) hamburger menu button on large screens, not the collapse control */
+.right .top button.menu-btn {
+  display: none;
+}
+
+.right .theme-toggler {
+  background: var(--color-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 1.8rem; /* slightly taller for better tap target */
+  width: 4.6rem;
+  cursor: pointer;
+  border-radius: var(--border-radius-1);
+}
+
+.right .theme-toggler span {
+  font-size: 1.3rem; /* scale icon size to match other areas */
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.right .theme-toggler span.active {
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--border-radius-1);
+}
+
+.right .top .profile {
+  display: flex;
+  gap: 2rem;
+  text-align: right;
+}
+
+/* ===================== Recent Updates=======================*/
+.right .recent-updates {
+  margin-top: 0.6rem;
+}
+
+.right .recent-updates h2 {
+  margin-bottom: 0.8rem;
+}
+
+.right .recent-updates .updates {
+  background: var(--color-white);
+  padding: 0.9rem 1rem; /* further reduced */
+  border-radius: 1rem; /* slightly smaller radius to save space visually */
+  box-shadow: var(--box-shadow);
+  transition: all 300ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.right .recent-updates .updates:hover {
+  box-shadow: none;
+}
+
+.right .recent-updates .update {
+  display: grid;
+  grid-template-columns: 2.2rem auto;
+  gap: 0.7rem;
+  margin: 0;
+}
+.right .recent-updates .updates .update:last-child {
+  margin-bottom: 0;
+}
+.right .recent-updates .message p {
+  font-size: 0.82rem; /* closer to base body size for readability */
+  line-height: 1.2rem;
+}
+.right .recent-updates .message small {
+  font-size: 0.68rem;
+}
+
+/* ========================== Sales Analytics ===========================*/
+.right .sales-analytics {
+  margin-top: 0.8rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.right .sales-analytics h2 {
+  margin-bottom: 0.8rem;
+}
+/* Redesigned analytics grid */
+.right .sales-analytics.redesigned {
+  gap: 0.8rem;
+}
+.sales-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+.mini-analytic-card {
+  position: relative;
+  background: var(--color-white);
+  border-radius: 1rem;
+  padding: 0.8rem 0.7rem 0.75rem;
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  /* More compact shadow */
+  box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 84px;
+}
+.mini-analytic-card:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    140deg,
+    var(--color-primary),
+    rgba(255, 255, 255, 0.05)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.mini-analytic-card .mac-icon-wrap span {
+  font-size: 1.5rem;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.35rem;
+  display: inline-flex;
+  line-height: 1;
+}
+.mini-analytic-card .mac-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.mini-analytic-card .mac-title {
+  font-size: 0.7rem; /* slightly larger for legibility */
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin: 0;
+  opacity: 0.85;
+}
+.mini-analytic-card .mac-value {
+  font-size: 1.08rem; /* emphasize primary metric */
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.mini-analytic-card .mac-delta {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+/* Variant accents */
+.mini-analytic-card.variant-danger .mac-icon-wrap span {
+  background: var(--color-danger);
+}
+.mini-analytic-card.variant-success .mac-icon-wrap span {
+  background: var(--color-success);
+}
+.mini-analytic-card.variant-warning .mac-icon-wrap span {
+  background: var(--color-warning);
+}
+
+.mini-add-product {
+  margin-top: 0.7rem;
+  background: var(--color-light);
+  border: 1px dashed var(--color-primary);
+  color: var(--color-primary);
+  font-size: 0.78rem; /* improved size for button text */
+  font-weight: 600;
+  border-radius: 0.9rem;
+  padding: 0.7rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+}
+.mini-add-product:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+.mini-add-product span.material-symbols-sharp {
+  font-size: 1.1rem;
+}
+
+@media only screen and (max-width: 1200px) {
+  .sales-analytics-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  }
+  .mini-analytic-card {
+    padding: 0.7rem 0.6rem;
+    min-height: 74px;
+  }
+  .mini-analytic-card .mac-value {
+    font-size: 0.85rem;
+  }
+}
+.right .sales-analytics .item:hover {
+  box-shadow: none;
+}
+
+.right .sales-analytics .item .right {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin: 0;
+  width: 100%;
+}
+
+.right .sales-analytics .item .icon {
+  padding: 0.6rem;
+  color: var(--color-white);
+  border-radius: 50%;
+  background: var(--color-primary);
+  display: flex;
+}
+
+.right .sales-analytics .item.offline .icon {
+  background: var(--color-danger);
+}
+.right .sales-analytics .item.customers .icon {
+  background: var(--color-success);
+}
+
+.right .sales-analytics .add-product {
+  background-color: transparent;
+  border: 2px dashed var(--color-primary);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.right .sales-analytics .add-product:hover {
+  background: var(--color-primary);
+  cursor: pointer;
+  color: white;
+}
+.right .sales-analytics .add-product div {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.right .sales-analytics .add-product div h3 {
+  font-weight: 600;
+}
+
+/* ========================== StatCard ===========================*/
+.stat-card {
+  background: var(--color-white);
+  padding: var(--card-padding);
+  border-radius: var(--card-border-radius);
+  margin-top: 1rem;
+  box-shadow: var(--elev-base);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 260ms ease, transform 260ms ease, background 240ms ease;
+}
+.stat-card:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 30% 25%,
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+.stat-card:hover {
+  box-shadow: var(--elev-hover);
+  transform: translateY(-5px);
+}
+.stat-card:hover:before {
+  opacity: 1;
+}
+
+.stat-card span.material-symbols-sharp {
+  background: var(--color-primary);
+  padding: 0.5rem;
+  border-radius: 50%;
+  color: var(--color-white);
+  font-size: 2rem;
+  width: 3rem;
+  height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card .middle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.stat-card .left h1 {
+  margin-top: 0.3rem;
+}
+
+.stat-card .progress {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card svg {
+  width: 92px;
+  height: 92px;
+}
+
+/* Ensure proper circle styling - styles are mostly handled inline now */
+.stat-card .progress-bar.expenses {
+  stroke: var(--color-danger);
+}
+
+.stat-card .progress-bar.income {
+  stroke: var(--color-success);
+}
+
+.stat-card:hover .progress-bar {
+  stroke-width: 10;
+}
+
+/* Ensure number is exactly centered in progress container and above the SVG */
+.stat-card .progress {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card .number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  pointer-events: none;
+  font-weight: 600;
+}
+
+.stat-card .number p {
+  font-size: 1.1rem;
+  color: var(--color-dark);
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+/* variant colors */
+.stat-card.expenses circle.progress-bar {
+  stroke: var(--color-danger);
+}
+
+.stat-card.income circle.progress-bar {
+  stroke: var(--color-success);
+}
+
+/* ========================== Media Queries ==========================*/
+@media only screen and (max-width: 1800px) {
+  main .filter input[type="name"] {
+    width: 140px;
+  }
+
+  main .filter input[type="email"] {
+    width: 140px;
+  }
+  main .filter input[type="text"] {
+    width: 140px;
+  }
+
+  main .customer-info table {
+    margin-top: 1rem;
+    background: var(--color-white);
+    width: 100%;
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    text-align: center;
+    box-shadow: var(--box-shadow);
+    transition: all 300ms ease;
+  }
+}
+@media only screen and (max-width: 1200px) {
+  .container {
+    width: 94%;
+    grid-template-columns: 7rem auto 23rem;
+    height: auto; /* allow natural height below 1200px */
+  }
+  body {
+    overflow: auto;
+  } /* restore default scrolling when layout changes */
+  main {
+    height: auto;
+    overflow: visible;
+  }
+  .right {
+    position: static;
+    height: auto;
+  }
+  aside {
+    position: static;
+    height: auto;
+  }
+}
+/* Original (layout-specific) rules for <=1200px retained below */
+@media only screen and (max-width: 1200px) {
+  .container {
+    width: 94%;
+    grid-template-columns: 7rem auto 23rem;
+  }
+
+  aside .logo h2 {
+    display: none;
+  }
+
+  aside .sidebar h3 {
+    display: none;
+  }
+
+  aside .sidebar a {
+    width: 5.6rem;
+  }
+
+  aside .sidebar a:last-child {
+    position: relative;
+    margin-top: 1.8rem;
+  }
+
+  main .insights {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  main .recent-orders {
+    width: 94%;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 2rem 0 0 8.8rem;
+  }
+
+  main .recent-orders table {
+    width: 83vw;
+  }
+
+  main table thead tr th:last-child,
+  main table thead tr th:first-child {
+    display: none;
+  }
+  main table tbody tr td:last-child,
+  main table tbody tr td:first-child {
+    display: none;
+  }
+}
+/* ==========================Media Queries==========================*/
+@media only screen and (max-width: 768px) {
+  .container {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  aside {
+    position: fixed;
+    left: -100%;
+    background: var(--color-white);
+    width: 18rem;
+    z-index: 3;
+    box-shadow: 1rem 3rem 4rem var(--color-light);
+    height: 100vh;
+    padding-right: var(--card-padding);
+    display: none;
+    animation: showMenu 400ms ease forwards;
+  }
+  @keyframes showMenu {
+    to {
+      left: 0;
+    }
+  }
+
+  aside .logo {
+    margin-left: 1rem;
+  }
+  aside .logo h2 {
+    display: inline;
+  }
+  aside .sidebar h3 {
+    display: inline;
+  }
+  aside .sidebar a {
+    width: 100%;
+    height: 3.4rem;
+  }
+  aside .sidebar a:last-child {
+    position: absolute;
+    bottom: 5rem;
+  }
+  aside .close {
+    display: inline-block;
+    cursor: pointer;
+  }
+  main {
+    margin-top: 8rem;
+    padding: 0 1rem;
+    overflow: visible; /* normal flow scrolling */
+    height: auto;
+  }
+
+  main .recent-orders {
+    position: relative;
+    margin: 3rem 0 0 0;
+    width: 100%;
+  }
+  main .recent-orders table {
+    width: 100%;
+    margin: 0;
+  }
+  .right {
+    width: 94%;
+    margin: 0 auto 4rem;
+    position: static;
+    height: auto;
+  }
+  .right .top {
+    position: fixed;
+    top: 0;
+    left: 0;
+    align-items: center;
+    padding: 0 0.8rem;
+    height: 4.6rem;
+    background: var(--color-white);
+    width: 100%;
+    margin: 0;
+    z-index: 2;
+    box-shadow: 0 1rem 1rem var(--color-light);
+  }
+  .right .top .theme-toggler {
+    position: absolute;
+    width: 4.4rem;
+    left: 66%;
+  }
+  .right .top button {
+    display: inline-block;
+    position: absolute;
+    background: transparent;
+    color: var(--color-dark);
+    left: 1rem;
+    cursor: pointer;
+  }
+  .right .top button span {
+    font-size: 2rem;
+  }
+}
+
+/* ===== Shared Elevation Utilities (re-added after cleanup) ===== */
+.hover-lift {
+  position: relative;
+  box-shadow: var(--elev-base);
+  transition: box-shadow 240ms ease, transform 240ms ease;
+}
+.hover-lift:hover {
+  box-shadow: var(--elev-hover);
+  transform: translateY(-4px);
+}
+
+/* Accessibility: reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift,
+  .kpi-card,
+  .analytics-panel,
+  .mini-analytic-card,
+  .stat-card,
+  main .insights > div {
+    transition: box-shadow 120ms ease;
+    transform: none !important;
+  }
+  .hover-lift:hover,
+  .kpi-card:hover,
+  .analytics-panel:hover,
+  .mini-analytic-card:hover,
+  .stat-card:hover,
+  main .insights > div:hover {
+    transform: none !important;
+  }
+}
+
+/* Focus outlines */
+.kpi-card:focus-visible,
+.analytics-panel:focus-visible,
+.mini-analytic-card:focus-visible,
+.stat-card:focus-visible,
+main .insights > div:focus-visible,
+.hover-lift:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
