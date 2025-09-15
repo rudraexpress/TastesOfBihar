@@ -1,58 +1,36 @@
 const { Sequelize } = require("sequelize");
 
-// Use environment variables if provided, otherwise attempt default Postgres
-const pgConfig = {
+// Database configuration placeholder - No database connected
+// This configuration is set up to be replaced with your actual database
+const dbConfig = {
   database: process.env.DB_NAME || "tasteofbihar",
   username: process.env.DB_USER || "your_db_user",
   password: process.env.DB_PASS || "your_db_password",
   host: process.env.DB_HOST || "localhost",
-  dialect: "postgres",
+  dialect: process.env.DB_DIALECT || "postgres",
 };
 
-// Default to SQLite for local development. If you want to use Postgres, set USE_PG=true
-// Initialize sequelize with SQLite immediately so models can be defined at require-time
-let sequelize = new Sequelize({
-  dialect: "sqlite",
-  storage: "f:/TasteOfBihar/server/dev.sqlite",
-  logging: false,
-});
+// No database connection - will be replaced with actual database configuration
+let sequelize = null;
 
 const connectDB = async () => {
-  // If explicitly requested, try to use Postgres (will replace sequelize instance)
-  if (process.env.USE_PG === "true") {
-    const pgSequelize = new Sequelize(
-      pgConfig.database,
-      pgConfig.username,
-      pgConfig.password,
-      {
-        host: pgConfig.host,
-        dialect: "postgres",
-        logging: false,
-      }
-    );
-    try {
-      await pgSequelize.authenticate();
-      sequelize = pgSequelize;
-      console.log("PostgreSQL connected");
-      return;
-    } catch (pgErr) {
-      console.error("PostgreSQL connection failed:", pgErr.message || pgErr);
-      console.error(
-        "Continuing with SQLite. To force failure on Postgres errors set USE_PG=true and ensure Postgres is reachable."
-      );
-    }
-  }
+  console.log(
+    "No database configured. Please set up your database connection."
+  );
+  console.log(
+    "Set environment variables: DB_NAME, DB_USER, DB_PASS, DB_HOST, DB_DIALECT"
+  );
 
-  // Test current (SQLite) connection
-  try {
-    await sequelize.authenticate();
-    console.log("SQLite connected");
-  } catch (sqliteErr) {
-    console.error("SQLite connection error:", sqliteErr);
-    process.exit(1);
-  }
+  // For development, we'll skip database connection to avoid errors
+  // In production, you should configure your actual database here
+  return Promise.resolve();
 };
 
-const getSequelize = () => sequelize;
+const getSequelize = () => {
+  if (!sequelize) {
+    console.warn("No database connection available");
+  }
+  return sequelize;
+};
 
 module.exports = { connectDB, getSequelize };

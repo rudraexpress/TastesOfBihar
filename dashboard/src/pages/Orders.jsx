@@ -147,7 +147,17 @@ export default function Orders() {
             ))}
             {!orders.length && !loading && (
               <tr>
-                <td colSpan={6}>No {activeStatus} orders.</td>
+                <td
+                  colSpan={6}
+                  style={{
+                    textAlign: "center",
+                    color: "var(--color-danger)",
+                    fontWeight: "600",
+                    padding: "2rem",
+                  }}
+                >
+                  No database connected - 0 {activeStatus} orders
+                </td>
               </tr>
             )}
           </tbody>

@@ -1,19 +1,35 @@
-import React from 'react';
+import React from "react";
 
 const StatCard = ({ className, icon, title, value, percent, smallText }) => {
   // Normalize percent: accept numbers or strings like "81%" and clamp to [0,100]
-  const raw = typeof percent === 'string' ? parseFloat(percent.replace('%', '')) : percent;
-  const numericPercent = Math.min(Math.max(Number.isFinite(raw) ? raw : 0, 0), 100);
+  const raw =
+    typeof percent === "string"
+      ? parseFloat(percent.replace("%", ""))
+      : percent;
+  const numericPercent = Math.min(
+    Math.max(Number.isFinite(raw) ? raw : 0, 0),
+    100
+  );
+
+  // Check if value indicates no data (0, "0", "₹0.00", etc.)
+  const isZeroValue =
+    value === "0" ||
+    value === "₹0.00" ||
+    value === "₹0" ||
+    (typeof value === "string" && value.match(/^[\₹$€£¥]?0(\.0+)?$/)) ||
+    value === 0;
 
   // Calculate the stroke dasharray for the circular progress
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (numericPercent / 100) * circumference;
+  const strokeDashoffset =
+    circumference - (numericPercent / 100) * circumference;
 
-  // Determine color based on card type
-  let strokeColor = 'var(--color-primary)';
-  if (className === 'expenses') strokeColor = 'var(--color-danger)';
-  if (className === 'income') strokeColor = 'var(--color-success)';
+  // Determine color based on card type or if it's a zero value
+  let strokeColor = "var(--color-primary)";
+  if (isZeroValue) strokeColor = "var(--color-danger)";
+  else if (className === "expenses") strokeColor = "var(--color-danger)";
+  else if (className === "income") strokeColor = "var(--color-success)";
 
   return (
     <div className={`stat-card ${className}`}>
@@ -23,10 +39,19 @@ const StatCard = ({ className, icon, title, value, percent, smallText }) => {
       <div className="middle">
         <div className="left">
           <h3>{title}</h3>
-          <h1>{value}</h1>
+          <h1
+            style={{ color: isZeroValue ? "var(--color-danger)" : "inherit" }}
+          >
+            {value}
+          </h1>
         </div>
         <div className="progress">
-          <svg className="progress-ring" width="92" height="92" viewBox="0 0 92 92">
+          <svg
+            className="progress-ring"
+            width="92"
+            height="92"
+            viewBox="0 0 92 92"
+          >
             <circle
               className={`progress-bar ${className}`}
               stroke={strokeColor}
@@ -39,8 +64,8 @@ const StatCard = ({ className, icon, title, value, percent, smallText }) => {
               style={{
                 strokeDasharray: circumference,
                 strokeDashoffset: strokeDashoffset,
-                strokeLinecap: 'round',
-                transition: 'stroke-dashoffset 0.5s ease'
+                strokeLinecap: "round",
+                transition: "stroke-dashoffset 0.5s ease",
               }}
             />
             <text
@@ -48,7 +73,11 @@ const StatCard = ({ className, icon, title, value, percent, smallText }) => {
               y="50%"
               dominantBaseline="middle"
               textAnchor="middle"
-              style={{ fontSize: '14px', fontWeight: 600, fill: 'var(--color-dark)' }}
+              style={{
+                fontSize: "14px",
+                fontWeight: 600,
+                fill: isZeroValue ? "var(--color-danger)" : "var(--color-dark)",
+              }}
             >
               {Math.round(numericPercent)}%
             </text>

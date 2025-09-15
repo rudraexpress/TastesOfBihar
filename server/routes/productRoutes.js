@@ -3,7 +3,6 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 const router = express.Router();
-const Product = require("../models/Product");
 
 // Ensure uploads directory exists (inside project-level assets for unified serving)
 const uploadsDir = path.join(__dirname, "..", "..", "assets", "uploads");
@@ -20,41 +19,41 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Get all products
+// Get all products - return empty array when no database connected
 router.get("/", async (req, res) => {
-  const products = await Product.findAll();
-  res.json(products);
+  res.json([]);
 });
 
-// Add a product
+// Add a product - return error when no database connected
 router.post("/", async (req, res) => {
-  const product = await Product.create(req.body);
-  res.json(product);
+  res.status(503).json({
+    message: "Database not connected - cannot create products",
+    error: "SERVICE_UNAVAILABLE",
+  });
 });
 
-// Get single product
+// Get single product - return error when no database connected
 router.get("/:id", async (req, res) => {
-  const product = await Product.findByPk(req.params.id);
-  if (!product) return res.status(404).json({ message: "Not found" });
-  res.json(product);
+  res.status(503).json({
+    message: "Database not connected - cannot fetch product",
+    error: "SERVICE_UNAVAILABLE",
+  });
 });
 
-// Update product
+// Update product - return error when no database connected
 router.put("/:id", async (req, res) => {
-  const id = req.params.id;
-  const product = await Product.findByPk(id);
-  if (!product) return res.status(404).json({ message: "Not found" });
-  await product.update(req.body);
-  res.json(product);
+  res.status(503).json({
+    message: "Database not connected - cannot update product",
+    error: "SERVICE_UNAVAILABLE",
+  });
 });
 
-// Delete product
+// Delete product - return error when no database connected
 router.delete("/:id", async (req, res) => {
-  const id = req.params.id;
-  const product = await Product.findByPk(id);
-  if (!product) return res.status(404).json({ message: "Not found" });
-  await product.destroy();
-  res.json({ success: true });
+  res.status(503).json({
+    message: "Database not connected - cannot delete product",
+    error: "SERVICE_UNAVAILABLE",
+  });
 });
 
 // Image upload endpoint
@@ -64,5 +63,7 @@ router.post("/upload", upload.single("image"), (req, res) => {
   const url = `/assets/uploads/${filename}`;
   res.json({ filename, url });
 });
+
+module.exports = router;
 
 module.exports = router;

@@ -233,7 +233,17 @@ export default function Products({ openSignal }) {
             ))}
             {!filtered.length && !loading && (
               <tr>
-                <td colSpan={5}>No products found.</td>
+                <td
+                  colSpan={5}
+                  style={{
+                    textAlign: "center",
+                    color: "var(--color-danger)",
+                    fontWeight: "600",
+                    padding: "2rem",
+                  }}
+                >
+                  No database connected - 0 products
+                </td>
               </tr>
             )}
           </tbody>

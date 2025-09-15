@@ -63,10 +63,11 @@ export default function RecentOrders() {
                 style={{
                   textAlign: "center",
                   padding: "1rem",
-                  color: "var(--color-muted)",
+                  color: "var(--color-danger)",
+                  fontWeight: "600",
                 }}
               >
-                No recent orders found
+                No database connected - 0 orders
               </td>
             </tr>
           ) : (

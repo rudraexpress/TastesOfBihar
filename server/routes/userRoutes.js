@@ -1,17 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User");
 
-// Get all users
+// Get all users - return empty array when no database connected
 router.get("/", async (req, res) => {
-  const users = await User.findAll();
-  res.json(users);
+  res.json([]);
 });
 
-// Register user
+// Register user - return error when no database connected
 router.post("/register", async (req, res) => {
-  const user = await User.create(req.body);
-  res.json(user);
+  res.status(503).json({
+    message: "Database not connected - cannot register users",
+    error: "SERVICE_UNAVAILABLE",
+  });
 });
 
 module.exports = router;
