@@ -31,6 +31,9 @@ export default function Accounts() {
     unit: "kg", // kept for compatibility but UI locked to kg
     totalAmount: "",
     gstRateOverride: "",
+    cgstRate: "",
+    sgstRate: "",
+    igstRate: "",
     notes: "",
     invoice: null,
   });
@@ -44,6 +47,16 @@ export default function Accounts() {
     notes: "",
     invoice: null,
   });
+  // dynamic expense categories with an inline 'add' modal
+  const [expenseCategories, setExpenseCategories] = useState([
+    "advertising",
+    "utilities",
+    "rent",
+    "other",
+  ]);
+  const [showAddExpenseCategoryModal, setShowAddExpenseCategoryModal] =
+    useState(false);
+  const [newExpenseCategory, setNewExpenseCategory] = useState("");
   const [saleForm, setSaleForm] = useState({
     customerName: "",
     invoiceNumber: "",
@@ -52,6 +65,10 @@ export default function Accounts() {
     unit: "pcs",
     total: "",
     gstRate: "",
+    cgstRate: "",
+    sgstRate: "",
+    igstRate: "",
+    invoice: null,
     notes: "",
   });
   const [salesSummaryState, setSalesSummary] = useState({
@@ -102,8 +119,15 @@ export default function Accounts() {
     form.append("quantity", purchaseForm.quantity);
     form.append("unit", purchaseForm.unit);
     form.append("totalAmount", purchaseForm.totalAmount);
-    if (purchaseForm.gstRateOverride)
-      form.append("gstRate", purchaseForm.gstRateOverride);
+    // append computed GST breakdown
+    const igstVal = purchaseForm.igstRate;
+    const cgstVal = purchaseForm.cgstRate;
+    const sgstVal = purchaseForm.sgstRate;
+    if (cgstVal) form.append("cgst", cgstVal);
+    if (sgstVal) form.append("sgst", sgstVal);
+    if (igstVal) form.append("igst", igstVal);
+    // total gst rate (preferred IGST else CGST+SGST else override or material)
+    form.append("gstRate", String(effectiveGstRate));
     if (purchaseForm.notes) form.append("notes", purchaseForm.notes);
     if (purchaseForm.invoice) form.append("invoice", purchaseForm.invoice);
     await createPurchase(form);
@@ -114,6 +138,9 @@ export default function Accounts() {
       unit: "kg",
       totalAmount: "",
       gstRateOverride: "",
+      cgstRate: "",
+      sgstRate: "",
+      igstRate: "",
       notes: "",
       invoice: null,
     });
@@ -125,10 +152,23 @@ export default function Accounts() {
     () => materials.find((m) => m.id == purchaseForm.rawMaterialId),
     [materials, purchaseForm.rawMaterialId]
   );
-  const effectiveGstRate =
-    purchaseForm.gstRateOverride !== ""
-      ? parseFloat(purchaseForm.gstRateOverride || 0)
-      : selectedMaterial?.gstRate || 0;
+  const effectiveGstRate = useMemo(() => {
+    // IGST takes precedence
+    const igst = parseFloat(purchaseForm.igstRate || 0) || 0;
+    if (igst) return igst;
+    const cgst = parseFloat(purchaseForm.cgstRate || 0) || 0;
+    const sgst = parseFloat(purchaseForm.sgstRate || 0) || 0;
+    if (cgst || sgst) return cgst + sgst;
+    if (purchaseForm.gstRateOverride !== "")
+      return parseFloat(purchaseForm.gstRateOverride || 0);
+    return selectedMaterial?.gstRate || 0;
+  }, [
+    purchaseForm.cgstRate,
+    purchaseForm.sgstRate,
+    purchaseForm.igstRate,
+    purchaseForm.gstRateOverride,
+    selectedMaterial,
+  ]);
   const computed = useMemo(() => {
     const total = parseFloat(purchaseForm.totalAmount || 0);
     if (!total) return { base: 0, gst: 0 };
@@ -136,6 +176,23 @@ export default function Accounts() {
     const base = total / (1 + effectiveGstRate / 100);
     return { base, gst: total - base };
   }, [purchaseForm.totalAmount, effectiveGstRate]);
+
+  // Expense GST computations
+  const expenseEffectiveGstRate = useMemo(() => {
+    const igst = parseFloat(expenseForm.igstRate || 0) || 0;
+    if (igst) return igst;
+    const cgst = parseFloat(expenseForm.cgstRate || 0) || 0;
+    const sgst = parseFloat(expenseForm.sgstRate || 0) || 0;
+    if (cgst || sgst) return cgst + sgst;
+    return 0;
+  }, [expenseForm.cgstRate, expenseForm.sgstRate, expenseForm.igstRate]);
+
+  const expenseComputed = useMemo(() => {
+    const base = parseFloat(expenseForm.baseAmount || 0) || 0;
+    const gst = base * (expenseEffectiveGstRate / 100);
+    const total = base + gst;
+    return { base, gst, total };
+  }, [expenseForm.baseAmount, expenseEffectiveGstRate]);
   const submitExpense = async (e) => {
     e.preventDefault();
     const form = new FormData();
@@ -159,12 +216,60 @@ export default function Accounts() {
 
   const submitSale = async (e) => {
     e.preventDefault();
-    const payload = { ...saleForm };
-    if (!payload.productId) delete payload.productId;
-    if (!payload.gstRate) delete payload.gstRate;
-    payload.quantity = parseFloat(payload.quantity) || 1;
-    payload.total = parseFloat(payload.total);
-    await createSale(payload);
+    // Prepare sale payload; if an invoice file is attached, send FormData
+    const igstVal = saleForm.igstRate;
+    const cgstVal = saleForm.cgstRate;
+    const sgstVal = saleForm.sgstRate;
+    const effectiveGstRate = igstVal
+      ? igstVal
+      : Number(cgstVal || 0) + Number(sgstVal || 0) || saleForm.gstRate;
+
+    // numeric coercions
+    const quantity = parseFloat(saleForm.quantity) || 1;
+    const total = parseFloat(saleForm.total) || 0;
+
+    if (saleForm.invoice) {
+      const form = new FormData();
+      form.append("customerName", saleForm.customerName);
+      if (saleForm.invoiceNumber)
+        form.append("invoiceNumber", saleForm.invoiceNumber);
+      if (saleForm.productId) form.append("productId", saleForm.productId);
+      form.append("quantity", String(quantity));
+      form.append("unit", saleForm.unit || "pcs");
+      form.append("total", String(total));
+      if (cgstVal) form.append("cgst", cgstVal);
+      if (sgstVal) form.append("sgst", sgstVal);
+      if (igstVal) form.append("igst", igstVal);
+      form.append("gstRate", String(effectiveGstRate));
+      if (saleForm.notes) form.append("notes", saleForm.notes);
+      form.append("invoice", saleForm.invoice);
+
+      // send as multipart
+      await fetch(
+        (import.meta.env?.VITE_API_URL || "http://localhost:5000/api") +
+          "/sales",
+        {
+          method: "POST",
+          body: form,
+        }
+      ).then((res) => {
+        if (!res.ok) throw new Error("API error");
+        return res.json();
+      });
+    } else {
+      const payload = { ...saleForm };
+      if (!payload.productId) delete payload.productId;
+      // attach computed GST breakdown
+      if (cgstVal) payload.cgst = cgstVal;
+      if (sgstVal) payload.sgst = sgstVal;
+      if (igstVal) payload.igst = igstVal;
+      payload.gstRate = effectiveGstRate;
+      payload.quantity = quantity;
+      payload.total = total;
+      if (!payload.gstRate) delete payload.gstRate;
+
+      await createSale(payload);
+    }
     setSaleForm({
       customerName: "",
       invoiceNumber: "",
@@ -173,6 +278,10 @@ export default function Accounts() {
       unit: "pcs",
       total: "",
       gstRate: "",
+      cgstRate: "",
+      sgstRate: "",
+      igstRate: "",
+      invoice: null,
       notes: "",
     });
     await load();
@@ -296,111 +405,259 @@ export default function Accounts() {
       {loading && <p>Loading...</p>}
       {tab === "purchases" && (
         <div style={{ marginTop: "1rem" }}>
-          <h2 style={{ margin: "0 0 .5rem" }}>Add Purchase</h2>
-          <form onSubmit={submitPurchase} style={formGrid}>
-            <input
-              placeholder="Supplier"
-              value={purchaseForm.supplier}
-              onChange={(e) => changePurchaseField("supplier", e.target.value)}
-              required
-              style={input}
-            />
-            <select
-              value={purchaseForm.rawMaterialId}
-              onChange={(e) =>
-                changePurchaseField("rawMaterialId", e.target.value)
-              }
-              required
-              style={input}
+          <h2 style={{ margin: "0 0 .5rem", textAlign: "center" }}>
+            Add Purchase
+          </h2>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              width: "100%",
+            }}
+          >
+            <form
+              onSubmit={submitPurchase}
+              style={{
+                ...formGrid,
+                margin: "0 auto",
+                width: "100%",
+                maxWidth: "600px",
+              }}
             >
-              <option value="">Select Material</option>
-              {materials.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
-            <div style={{ display: "flex", gap: ".5rem" }}>
               <input
-                type="number"
-                placeholder="Quantity"
-                value={purchaseForm.quantity}
+                placeholder="Supplier"
+                value={purchaseForm.supplier}
                 onChange={(e) =>
-                  changePurchaseField("quantity", e.target.value)
+                  changePurchaseField("supplier", e.target.value)
                 }
                 required
-                style={{ ...input, flex: 1 }}
+                style={input}
+              />
+              <select
+                value={purchaseForm.rawMaterialId}
+                onChange={(e) =>
+                  changePurchaseField("rawMaterialId", e.target.value)
+                }
+                required
+                style={input}
+              >
+                <option value="">Select Material</option>
+                {materials.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+              <div style={{ display: "flex", gap: ".5rem" }}>
+                <input
+                  type="number"
+                  placeholder="Quantity"
+                  value={purchaseForm.quantity}
+                  onChange={(e) =>
+                    changePurchaseField("quantity", e.target.value)
+                  }
+                  required
+                  style={{ ...input, flex: 1 }}
+                />
+                <select
+                  value={purchaseForm.unit}
+                  onChange={(e) => changePurchaseField("unit", e.target.value)}
+                  style={{
+                    ...input,
+                    display: "inline-block",
+                    padding: "0.35rem 0.6rem",
+                    minWidth: "70px",
+                    textAlign: "center",
+                    borderRadius: "6px",
+                    fontSize: ".85rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  <option value="kg">kg</option>
+                  <option value="g">g</option>
+                </select>
+              </div>
+              <input
+                type="number"
+                placeholder="Total Amount (Incl. GST)"
+                value={purchaseForm.totalAmount}
+                onChange={(e) =>
+                  changePurchaseField("totalAmount", e.target.value)
+                }
+                required
+                style={input}
               />
               <div
                 style={{
                   display: "flex",
+                  gap: ".6rem",
                   alignItems: "center",
-                  padding: "0.5rem 0.7rem",
-                  background: "var(--color-light)",
-                  borderRadius: "6px",
-                  fontSize: ".85rem",
-                  fontWeight: 600,
-                  minWidth: "70px",
-                  justifyContent: "center",
+                  flexWrap: "wrap",
+                  width: "100%",
                 }}
               >
-                kg
-              </div>
-            </div>
-            <input
-              type="number"
-              placeholder="Total Amount (Incl. GST)"
-              value={purchaseForm.totalAmount}
-              onChange={(e) =>
-                changePurchaseField("totalAmount", e.target.value)
-              }
-              required
-              style={input}
-            />
-            <div
-              style={{
-                display: "flex",
-                gap: ".5rem",
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <input
-                type="number"
-                placeholder={`GST % (Material: ${
-                  selectedMaterial?.gstRate || 0
-                })`}
-                value={purchaseForm.gstRateOverride}
-                onChange={(e) =>
-                  changePurchaseField("gstRateOverride", e.target.value)
-                }
-                style={{ ...input, flex: 1 }}
-              />
-              <div style={{ fontSize: ".8rem" }}>
-                <div>Base: ₹{computed.base.toFixed(2)}</div>
-                <div>
-                  GST: ₹{computed.gst.toFixed(2)} ({effectiveGstRate}%)
+                <div style={{ display: "flex", gap: ".5rem", flex: 1 }}>
+                  <input
+                    type="number"
+                    placeholder="CGST %"
+                    value={purchaseForm.cgstRate}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      // setting CGST/SGST clears IGST
+                      setPurchaseForm((x) => ({
+                        ...x,
+                        cgstRate: v,
+                        igstRate: "",
+                      }));
+                    }}
+                    style={{ ...input, flex: 1, minWidth: 80 }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="SGST %"
+                    value={purchaseForm.sgstRate}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setPurchaseForm((x) => ({
+                        ...x,
+                        sgstRate: v,
+                        igstRate: "",
+                      }));
+                    }}
+                    style={{ ...input, flex: 1, minWidth: 80 }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="IGST %"
+                    value={purchaseForm.igstRate}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      // setting IGST clears CGST/SGST
+                      setPurchaseForm((x) => ({
+                        ...x,
+                        igstRate: v,
+                        cgstRate: "",
+                        sgstRate: "",
+                      }));
+                    }}
+                    style={{ ...input, width: "140px", minWidth: 100 }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: ".6rem",
+                    flex: 1,
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: ".6rem",
+                    }}
+                  >
+                    <input
+                      type="text"
+                      readOnly
+                      value={`GST %: ${effectiveGstRate}%`}
+                      style={{
+                        ...input,
+                        width: "120px",
+                        textAlign: "center",
+                        background: "var(--color-light)",
+                      }}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: ".6rem",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: ".8rem",
+                        display: "flex",
+                        flexDirection: "column",
+                        textAlign: "right",
+                      }}
+                    >
+                      <div>Base: ₹{computed.base.toFixed(2)}</div>
+                      <div>
+                        GST: ₹{computed.gst.toFixed(2)} ({effectiveGstRate}%)
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <textarea
-              placeholder="Notes"
-              value={purchaseForm.notes}
-              onChange={(e) => changePurchaseField("notes", e.target.value)}
-              style={{ ...input, resize: "vertical" }}
-            />
-            <input
-              type="file"
-              onChange={(e) =>
-                changePurchaseField("invoice", e.target.files[0])
-              }
-            />
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button type="submit" style={btnPrimary}>
-                Save Purchase
-              </button>
-            </div>
-          </form>
+
+              <textarea
+                placeholder="Notes"
+                value={purchaseForm.notes}
+                onChange={(e) => changePurchaseField("notes", e.target.value)}
+                style={{ ...input, resize: "vertical" }}
+              />
+              <div
+                style={{ display: "flex", alignItems: "center", gap: ".6rem" }}
+              >
+                <input
+                  id="purchase-invoice-input"
+                  type="file"
+                  onChange={(e) =>
+                    changePurchaseField("invoice", e.target.files[0])
+                  }
+                  style={{ display: "none" }}
+                  aria-label="Upload purchase invoice"
+                />
+
+                <label
+                  htmlFor="purchase-invoice-input"
+                  style={{
+                    background: "var(--color-primary)",
+                    color: "#fff",
+                    padding: ".35rem .6rem",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: ".35rem",
+                    border: "none",
+                    fontSize: "0.9rem",
+                    height: "32px",
+                  }}
+                >
+                  <span
+                    className="material-symbols-sharp"
+                    style={{ fontSize: "18px", lineHeight: 1 }}
+                  >
+                    cloud_upload
+                  </span>
+                  Choose Invoice
+                </label>
+
+                <div style={{ fontSize: ".9rem", color: "var(--color-dark)" }}>
+                  {purchaseForm.invoice ? (
+                    <span>{purchaseForm.invoice.name || "Selected file"}</span>
+                  ) : (
+                    <span style={{ color: "#6b7280" }}>No file chosen</span>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <button type="submit" style={btnPrimary}>
+                  Save Purchase
+                </button>
+              </div>
+            </form>
+          </div>
           <h2 style={{ margin: "2rem 0 .5rem" }}>Recent Purchases</h2>
           <div className="customer-info">
             <table>
@@ -409,48 +666,57 @@ export default function Accounts() {
                   <th>Date</th>
                   <th>Material</th>
                   <th>Qty (kg)</th>
-                  <th>Total</th>
-                  <th>Base</th>
-                  <th>GST</th>
-                  <th>Rate%</th>
                   <th>Invoice</th>
+                  <th>Base</th>
+                  <th>CGST</th>
+                  <th>SGST</th>
+                  <th>IGST</th>
+                  <th>GST (total)</th>
+                  <th>Total</th>
                 </tr>
               </thead>
               <tbody>
-                {purchases.map((p) => (
-                  <tr key={p.id}>
-                    <td>{new Date(p.createdAt).toLocaleDateString()}</td>
-                    <td style={{ textAlign: "left" }}>
-                      {materials.find((m) => m.id === p.rawMaterialId)?.name ||
-                        p.rawMaterialId}
-                    </td>
-                    <td>{(p.quantityGrams / 1000).toFixed(2)}</td>
-                    <td>₹{p.price.toFixed(2)}</td>
-                    <td>₹{p.baseAmount?.toFixed(2)}</td>
-                    <td>₹{(p.gst ?? p.sgst + p.cgst + p.igst).toFixed(2)}</td>
-                    <td>
-                      {p.gstRate ??
-                        (p.sgst + p.cgst + p.igst && p.baseAmount
-                          ? (
-                              ((p.sgst + p.cgst + p.igst) / p.baseAmount) *
-                              100
-                            ).toFixed(2)
-                          : 0)}
-                    </td>
-                    <td>
-                      {p.invoiceFile ? (
-                        <a href={p.invoiceFile} target="_blank">
-                          View
-                        </a>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {purchases.map((p) => {
+                  const cgst = Number(p.cgst) || 0;
+                  const sgst = Number(p.sgst) || 0;
+                  const igst = Number(p.igst) || 0;
+                  const gstTotal = Number(p.gst) || cgst + sgst + igst;
+                  const base = Number(p.baseAmount) || 0;
+                  const ratePercent = p.gstRate
+                    ? Number(p.gstRate)
+                    : base
+                    ? Number(((gstTotal / base) * 100).toFixed(2))
+                    : 0;
+
+                  return (
+                    <tr key={p.id}>
+                      <td>{new Date(p.createdAt).toLocaleDateString()}</td>
+                      <td style={{ textAlign: "left" }}>
+                        {materials.find((m) => m.id === p.rawMaterialId)
+                          ?.name || p.rawMaterialId}
+                      </td>
+                      <td>{(p.quantityGrams / 1000).toFixed(2)}</td>
+                      <td>
+                        {p.invoiceFile ? (
+                          <a href={p.invoiceFile} target="_blank">
+                            View
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td>₹{base.toFixed(2)}</td>
+                      <td>₹{cgst.toFixed(2)}</td>
+                      <td>₹{sgst.toFixed(2)}</td>
+                      <td>₹{igst.toFixed(2)}</td>
+                      <td>₹{gstTotal.toFixed(2)}</td>
+                      <td>₹{Number(p.price || 0).toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
                 {!purchases.length && (
                   <tr>
-                    <td colSpan={8}>No purchases</td>
+                    <td colSpan={10}>No purchases</td>
                   </tr>
                 )}
               </tbody>
@@ -487,34 +753,60 @@ export default function Accounts() {
                 <tr>
                   <th>Date</th>
                   <th>Customer</th>
+                  <th>Qty (pcs)</th>
                   <th>Invoice</th>
-                  <th>Qty</th>
-                  <th>Total</th>
                   <th>Base</th>
-                  <th>GST</th>
-                  <th>Rate%</th>
+                  <th>CGST</th>
+                  <th>SGST</th>
+                  <th>IGST</th>
+                  <th>GST (total)</th>
+                  <th>Total</th>
                 </tr>
               </thead>
               <tbody>
-                {sales.map((s) => (
-                  <tr key={s.id}>
-                    <td>{new Date(s.createdAt).toLocaleDateString()}</td>
-                    <td style={{ textAlign: "left" }}>
-                      {s.customerName || "-"}
-                    </td>
-                    <td>{s.invoiceNumber || "-"}</td>
-                    <td>
-                      {s.quantity} {s.unit || ""}
-                    </td>
-                    <td>₹{s.total.toFixed(2)}</td>
-                    <td>₹{s.baseAmount.toFixed(2)}</td>
-                    <td>₹{s.gst.toFixed(2)}</td>
-                    <td>{s.gstRate || 0}</td>
-                  </tr>
-                ))}
+                {sales.map((s) => {
+                  const cgst = Number(s.cgst) || 0;
+                  const sgst = Number(s.sgst) || 0;
+                  const igst = Number(s.igst) || 0;
+                  const gstTotal = Number(s.gst) || cgst + sgst + igst;
+                  const base = Number(s.baseAmount) || 0;
+                  const total = Number(s.total) || 0;
+                  return (
+                    <tr key={s.id}>
+                      <td>{new Date(s.createdAt).toLocaleDateString()}</td>
+                      <td style={{ textAlign: "left" }}>
+                        {s.customerName || "-"}
+                      </td>
+                      <td>
+                        {s.quantity} {s.unit || "pcs"}
+                      </td>
+                      <td>
+                        {s.invoiceFile ? (
+                          <a
+                            href={s.invoiceFile}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View
+                          </a>
+                        ) : s.invoiceNumber ? (
+                          s.invoiceNumber
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td>₹{base.toFixed(2)}</td>
+                      <td>₹{cgst.toFixed(2)}</td>
+                      <td>₹{sgst.toFixed(2)}</td>
+                      <td>₹{igst.toFixed(2)}</td>
+                      <td>₹{gstTotal.toFixed(2)}</td>
+                      <td>₹{total.toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
                 {!sales.length && (
                   <tr>
-                    <td colSpan={8}>No sales</td>
+                    <td colSpan={10}>No sales</td>
                   </tr>
                 )}
               </tbody>
@@ -545,16 +837,67 @@ export default function Accounts() {
                 maxWidth: "600px",
               }}
             >
-              <select
-                value={expenseForm.category}
-                onChange={(e) => changeExpenseField("category", e.target.value)}
-                style={input}
+              <div
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                }}
               >
-                <option value="advertising">Advertising</option>
-                <option value="utilities">Utilities</option>
-                <option value="rent">Rent</option>
-                <option value="other">Other</option>
-              </select>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
+                  <select
+                    value={expenseForm.category}
+                    onChange={(e) =>
+                      changeExpenseField("category", e.target.value)
+                    }
+                    style={{
+                      ...input,
+                      flex: 1,
+                      borderTopRightRadius: 0,
+                      borderBottomRightRadius: 0,
+                      borderRight: "none",
+                      WebkitAppearance: "none",
+                      MozAppearance: "none",
+                      appearance: "none",
+                    }}
+                  >
+                    <option value="">Select Category</option>
+                    {expenseCategories.map((c) => (
+                      <option key={c} value={c}>
+                        {c.charAt(0).toUpperCase() + c.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddExpenseCategoryModal(true)}
+                    aria-label="Add expense category"
+                    style={{
+                      height: "34px",
+                      minWidth: "40px",
+                      borderRadius: "0 6px 6px 0",
+                      background: "var(--color-primary)",
+                      color: "#fff",
+                      border: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      fontSize: "1.05rem",
+                      padding: 0,
+                      marginLeft: -1,
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
               <input
                 placeholder="Description"
                 value={expenseForm.description}
@@ -603,18 +946,106 @@ export default function Accounts() {
                   style={{ ...input, flex: 1 }}
                 />
               </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: ".6rem",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  width: "100%",
+                }}
+              >
+                <div style={{ display: "flex", gap: ".5rem", flex: 1 }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={`GST %: ${expenseEffectiveGstRate}%`}
+                    style={{
+                      ...input,
+                      width: "120px",
+                      textAlign: "center",
+                      background: "var(--color-light)",
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: ".6rem",
+                    justifyContent: "flex-end",
+                    flex: 1,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: ".8rem",
+                      display: "flex",
+                      flexDirection: "column",
+                      textAlign: "right",
+                    }}
+                  >
+                    <div>Base: ₹{expenseComputed.base.toFixed(2)}</div>
+                    <div>
+                      GST: ₹{expenseComputed.gst.toFixed(2)} (
+                      {expenseEffectiveGstRate}%)
+                    </div>
+                  </div>
+                </div>
+              </div>
               <textarea
                 placeholder="Notes"
                 value={expenseForm.notes}
                 onChange={(e) => changeExpenseField("notes", e.target.value)}
                 style={{ ...input, resize: "vertical" }}
               />
-              <input
-                type="file"
-                onChange={(e) =>
-                  changeExpenseField("invoice", e.target.files[0])
-                }
-              />
+              <div
+                style={{ display: "flex", alignItems: "center", gap: ".6rem" }}
+              >
+                <input
+                  id="expense-invoice-input"
+                  type="file"
+                  onChange={(e) =>
+                    changeExpenseField("invoice", e.target.files[0])
+                  }
+                  style={{ display: "none" }}
+                  aria-label="Upload expense invoice"
+                />
+
+                <label
+                  htmlFor="expense-invoice-input"
+                  style={{
+                    background: "var(--color-primary)",
+                    color: "#fff",
+                    padding: ".35rem .6rem",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: ".35rem",
+                    border: "none",
+                    fontSize: "0.9rem",
+                    height: "32px",
+                  }}
+                >
+                  <span
+                    className="material-symbols-sharp"
+                    style={{ fontSize: "18px", lineHeight: 1 }}
+                  >
+                    cloud_upload
+                  </span>
+                  Choose Invoice
+                </label>
+
+                <div style={{ fontSize: ".9rem", color: "var(--color-dark)" }}>
+                  {expenseForm.invoice ? (
+                    <span>{expenseForm.invoice.name || "Selected file"}</span>
+                  ) : (
+                    <span style={{ color: "#6b7280" }}>No file chosen</span>
+                  )}
+                </div>
+              </div>
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button type="submit" style={btnPrimary}>
                   Save Expense
@@ -645,35 +1076,55 @@ export default function Accounts() {
                     <th>Date</th>
                     <th>Category</th>
                     <th>Description</th>
+                    <th>Base</th>
+                    <th>CGST</th>
+                    <th>SGST</th>
+                    <th>IGST</th>
+                    <th>GST (total)</th>
                     <th>Total</th>
-                    <th>GST</th>
                     <th>Invoice</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {expenses.map((x) => (
-                    <tr key={x.id}>
-                      <td>{new Date(x.createdAt).toLocaleDateString()}</td>
-                      <td>{x.category}</td>
-                      <td style={{ textAlign: "left", maxWidth: "260px" }}>
-                        {x.description}
-                      </td>
-                      <td>₹{x.amount.toFixed(2)}</td>
-                      <td>₹{(x.sgst + x.cgst + x.igst).toFixed(2)}</td>
-                      <td>
-                        {x.invoiceFile ? (
-                          <a href={x.invoiceFile} target="_blank">
-                            View
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {expenses.map((x) => {
+                    const cgst = Number(x.cgst) || 0;
+                    const sgst = Number(x.sgst) || 0;
+                    const igst = Number(x.igst) || 0;
+                    const gstTotal = Number(x.gst) || cgst + sgst + igst;
+                    const base = Number(x.baseAmount) || 0;
+                    const total = Number(x.amount) || 0;
+                    return (
+                      <tr key={x.id}>
+                        <td>{new Date(x.createdAt).toLocaleDateString()}</td>
+                        <td>{x.category}</td>
+                        <td style={{ textAlign: "left", maxWidth: "260px" }}>
+                          {x.description}
+                        </td>
+                        <td>₹{base.toFixed(2)}</td>
+                        <td>₹{cgst.toFixed(2)}</td>
+                        <td>₹{sgst.toFixed(2)}</td>
+                        <td>₹{igst.toFixed(2)}</td>
+                        <td>₹{gstTotal.toFixed(2)}</td>
+                        <td>₹{total.toFixed(2)}</td>
+                        <td>
+                          {x.invoiceFile ? (
+                            <a
+                              href={x.invoiceFile}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              View
+                            </a>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {!expenses.length && (
                     <tr>
-                      <td colSpan={6}>No expenses</td>
+                      <td colSpan={10}>No expenses</td>
                     </tr>
                   )}
                 </tbody>
@@ -737,17 +1188,23 @@ export default function Accounts() {
                   onChange={(e) => changeSaleField("quantity", e.target.value)}
                   style={{ ...input, flex: 1 }}
                 />
-                <select
-                  value={saleForm.unit}
-                  onChange={(e) => changeSaleField("unit", e.target.value)}
-                  style={{ ...input, width: "90px" }}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "0.35rem 0.6rem",
+                    background: "var(--color-light)",
+                    borderRadius: "6px",
+                    fontSize: ".85rem",
+                    fontWeight: 600,
+                    minWidth: "70px",
+                    justifyContent: "center",
+                  }}
                 >
-                  <option value="pcs">pcs</option>
-                  <option value="kg">kg</option>
-                  <option value="g">g</option>
-                  <option value="pack">pack</option>
-                </select>
+                  pcs
+                </div>
               </div>
+
               <div style={{ display: "flex", gap: ".6rem" }}>
                 <input
                   type="number"
@@ -757,25 +1214,147 @@ export default function Accounts() {
                   required
                   style={{ ...input, flex: 1 }}
                 />
-                <input
-                  type="number"
-                  placeholder="GST %"
-                  value={saleForm.gstRate}
-                  onChange={(e) => changeSaleField("gstRate", e.target.value)}
-                  style={{ ...input, width: "90px" }}
-                />
               </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: ".6rem",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  width: "100%",
+                }}
+              >
+                <div style={{ display: "flex", gap: ".5rem", flex: 1 }}>
+                  <input
+                    type="number"
+                    placeholder="CGST %"
+                    value={saleForm.cgstRate}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      changeSaleField("cgstRate", v);
+                      // clear IGST
+                      changeSaleField("igstRate", "");
+                    }}
+                    style={{ ...input, flex: 1, minWidth: 80 }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="SGST %"
+                    value={saleForm.sgstRate}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      changeSaleField("sgstRate", v);
+                      changeSaleField("igstRate", "");
+                    }}
+                    style={{ ...input, flex: 1, minWidth: 80 }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="IGST %"
+                    value={saleForm.igstRate}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      changeSaleField("igstRate", v);
+                      changeSaleField("cgstRate", "");
+                      changeSaleField("sgstRate", "");
+                    }}
+                    style={{ ...input, width: "140px", minWidth: 100 }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: ".6rem",
+                    flex: 1,
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <input
+                    type="text"
+                    readOnly
+                    value={`GST %: ${
+                      saleForm.igstRate
+                        ? saleForm.igstRate
+                        : Number(saleForm.cgstRate || 0) +
+                            Number(saleForm.sgstRate || 0) ||
+                          saleForm.gstRate ||
+                          0
+                    }%`}
+                    style={{
+                      ...input,
+                      width: "120px",
+                      textAlign: "center",
+                      background: "var(--color-light)",
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      fontSize: ".75rem",
+                      display: "flex",
+                      gap: "1.5rem",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <span>
+                      Base: ₹{saleBase ? saleBase.toFixed(2) : "0.00"}
+                    </span>
+                    <span>GST: ₹{saleGst ? saleGst.toFixed(2) : "0.00"}</span>
+                  </div>
+                </div>
+              </div>
+
               <textarea
                 placeholder="Notes"
                 value={saleForm.notes}
                 onChange={(e) => changeSaleField("notes", e.target.value)}
                 style={{ ...input, resize: "vertical", minHeight: "70px" }}
               />
+
+              <input
+                id="sale-invoice-input"
+                type="file"
+                onChange={(e) => changeSaleField("invoice", e.target.files[0])}
+                style={{ display: "none" }}
+                aria-label="Upload sale invoice"
+              />
               <div
-                style={{ fontSize: ".75rem", display: "flex", gap: "1.5rem" }}
+                style={{ display: "flex", gap: ".6rem", alignItems: "center" }}
               >
-                <span>Base: ₹{saleBase ? saleBase.toFixed(2) : "0.00"}</span>
-                <span>GST: ₹{saleGst ? saleGst.toFixed(2) : "0.00"}</span>
+                <label
+                  htmlFor="sale-invoice-input"
+                  style={{
+                    background: "var(--color-primary)",
+                    color: "#fff",
+                    padding: ".35rem .6rem",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: ".35rem",
+                    border: "none",
+                    fontSize: "0.9rem",
+                    height: "32px",
+                  }}
+                >
+                  <span
+                    className="material-symbols-sharp"
+                    style={{ fontSize: "18px", lineHeight: 1 }}
+                  >
+                    cloud_upload
+                  </span>
+                  Choose Invoice
+                </label>
+                <div style={{ fontSize: ".9rem", color: "var(--color-dark)" }}>
+                  {saleForm.invoice ? (
+                    <span>{saleForm.invoice.name || "Selected file"}</span>
+                  ) : (
+                    <span style={{ color: "#6b7280" }}>No file chosen</span>
+                  )}
+                </div>
               </div>
               <div
                 style={{
@@ -796,6 +1375,79 @@ export default function Accounts() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {showAddExpenseCategoryModal && (
+        <div style={modalBackdrop}>
+          <div
+            style={modalCard}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add Expense Category"
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: ".75rem",
+              }}
+            >
+              <h3 style={{ margin: 0 }}>Add Expense Category</h3>
+              <button
+                type="button"
+                onClick={() => setShowAddExpenseCategoryModal(false)}
+                style={btnGhost}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ display: "grid", gap: ".6rem" }}>
+              <input
+                placeholder="Category name"
+                value={newExpenseCategory}
+                onChange={(e) => setNewExpenseCategory(e.target.value)}
+                style={input}
+                autoFocus
+              />
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: ".6rem",
+                }}
+              >
+                <button
+                  type="button"
+                  style={btn}
+                  onClick={() => {
+                    setNewExpenseCategory("");
+                    setShowAddExpenseCategoryModal(false);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  style={btnPrimary}
+                  onClick={() => {
+                    const v = (newExpenseCategory || "").trim();
+                    if (!v) return;
+                    // prevent duplicates
+                    if (!expenseCategories.includes(v)) {
+                      setExpenseCategories((s) => [...s, v]);
+                    }
+                    changeExpenseField("category", v);
+                    setNewExpenseCategory("");
+                    setShowAddExpenseCategoryModal(false);
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1074,10 +1726,11 @@ const modalBackdrop = {
 };
 const modalCard = {
   background: "var(--color-white)",
-  padding: "1.2rem 1.3rem 1.4rem",
-  borderRadius: "1rem",
-  width: "min(480px, 92vw)",
+  padding: ".9rem 1rem",
+  borderRadius: ".8rem",
+  width: "min(720px, 94vw)",
   boxShadow: "var(--box-shadow)",
-  maxHeight: "80vh",
+  maxHeight: "85vh",
   overflowY: "auto",
+  boxSizing: "border-box",
 };

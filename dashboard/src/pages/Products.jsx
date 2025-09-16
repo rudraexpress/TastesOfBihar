@@ -358,12 +358,66 @@ export default function Products({ openSignal }) {
               </div>
               <div>
                 <label>Upload Image</label>
-                <input type="file" accept="image/*" onChange={handleFile} />
-                {uploading && (
-                  <small className="text-muted">Uploading...</small>
-                )}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.6rem",
+                    marginTop: "0.4rem",
+                  }}
+                >
+                  {/* hidden native input */}
+                  <input
+                    id="product-image-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFile}
+                    style={{ display: "none" }}
+                    aria-label="Choose product image"
+                  />
+
+                  {/* visible themed button that triggers the hidden input */}
+                  <label
+                    htmlFor="product-image-input"
+                    style={{
+                      background: "var(--color-primary)",
+                      color: "white",
+                      padding: "0.35rem 0.6rem",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                      border: "none",
+                      fontSize: "0.9rem",
+                      height: "32px",
+                    }}
+                  >
+                    <span
+                      className="material-symbols-sharp"
+                      style={{ fontSize: "18px", lineHeight: 1 }}
+                    >
+                      cloud_upload
+                    </span>
+                    Choose Image
+                  </label>
+
+                  {/* filename or status */}
+                  <div
+                    style={{ fontSize: "0.9rem", color: "var(--color-dark)" }}
+                  >
+                    {uploading ? (
+                      <span className="text-muted">Uploading...</span>
+                    ) : form.localImage ? (
+                      <span>{form.localImage}</span>
+                    ) : (
+                      <span style={{ color: "#6b7280" }}>No file chosen</span>
+                    )}
+                  </div>
+                </div>
+
                 {form.imageUrl && (
-                  <div style={{ marginTop: "0.5rem" }}>
+                  <div style={{ marginTop: "0.6rem" }}>
                     <img
                       src={form.imageUrl}
                       alt="preview"
@@ -372,6 +426,7 @@ export default function Products({ openSignal }) {
                         height: "120px",
                         objectFit: "cover",
                         borderRadius: "8px",
+                        boxShadow: "var(--box-shadow)",
                       }}
                     />
                   </div>

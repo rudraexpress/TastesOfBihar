@@ -79,76 +79,118 @@ export default function Orders() {
         <table>
           <thead>
             <tr>
-              <th>#</th>
+              <th>Sl No.</th>
               <th>Customer</th>
+              <th>Product</th>
+              <th>Qty</th>
               <th>Total (₹)</th>
               <th>Status</th>
-              <th>Placed</th>
+              <th>Date & Time</th>
+              <th>Invoice</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {orders.map((o, idx) => (
-              <tr key={o.id}>
-                <td>{idx + 1}</td>
-                <td style={{ textAlign: "left" }}>{o.customerName || "-"}</td>
-                <td>₹{o.total?.toFixed(2)}</td>
-                <td>
-                  <span
-                    className="status-badge"
-                    style={{
-                      background:
-                        o.status === "pending"
-                          ? "#f7cb73"
-                          : o.status === "shipped"
-                          ? "#6d9ff5"
-                          : "#7ddf91",
-                      color: "#222",
-                      padding: "4px 10px",
-                      borderRadius: "20px",
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    {o.status}
-                  </span>
-                </td>
-                <td>
-                  {o.createdAt ? new Date(o.createdAt).toLocaleString() : "-"}
-                </td>
-                <td>
-                  {o.status !== "delivered" ? (
-                    <button
-                      onClick={() => cycleStatus(o)}
+            {orders.map((o, idx) => {
+              // determine product/title and quantity
+              const firstItem = (o.items && o.items[0]) || o;
+              const productName =
+                firstItem.productName || firstItem.name || o.productName || "-";
+              const quantity =
+                firstItem.qty || firstItem.quantity || o.quantity || "-";
+              const invoiceLink =
+                o.invoiceFile || o.invoiceUrl || o.invoiceNumber || null;
+
+              return (
+                <tr key={o.id}>
+                  <td>
+                    {o.orderNumber || o.orderNo || o.id || `IDX-${idx + 1}`}
+                  </td>
+                  <td style={{ textAlign: "left" }}>{o.customerName || "-"}</td>
+                  <td style={{ textAlign: "left" }}>{productName}</td>
+                  <td>{quantity}</td>
+                  <td>₹{(o.total || 0).toFixed(2)}</td>
+                  <td>
+                    <span
+                      className="status-badge"
                       style={{
-                        background: "var(--color-primary)",
-                        color: "#fff",
-                        padding: "4px 12px",
-                        borderRadius: "6px",
-                        cursor: "pointer",
+                        background:
+                          o.status === "pending"
+                            ? "#f7cb73"
+                            : o.status === "shipped"
+                            ? "#6d9ff5"
+                            : "#7ddf91",
+                        color: "#222",
+                        padding: "4px 10px",
+                        borderRadius: "20px",
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
                       }}
                     >
-                      Mark{" "}
-                      {o.status === "pending"
-                        ? "Shipped"
-                        : o.status === "shipped"
-                        ? "Delivered"
-                        : "Done"}
-                    </button>
-                  ) : (
-                    <span style={{ color: "var(--color-success)" }}>
-                      Complete
+                      {o.status}
                     </span>
-                  )}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td>
+                    {o.createdAt
+                      ? // if backend already sends comma-separated date,time use it
+                        typeof o.createdAt === "string" &&
+                        o.createdAt.includes(",")
+                        ? o.createdAt
+                        : `${new Date(
+                            o.createdAt
+                          ).toLocaleDateString()}, ${new Date(
+                            o.createdAt
+                          ).toLocaleTimeString()}`
+                      : "-"}
+                  </td>
+                  <td>
+                    {invoiceLink ? (
+                      invoiceLink.startsWith &&
+                      invoiceLink.startsWith("http") ? (
+                        <a href={invoiceLink} target="_blank" rel="noreferrer">
+                          View
+                        </a>
+                      ) : (
+                        <span>{invoiceLink}</span>
+                      )
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td>
+                    {o.status !== "delivered" ? (
+                      <button
+                        onClick={() => cycleStatus(o)}
+                        style={{
+                          background: "var(--color-primary)",
+                          color: "#fff",
+                          padding: "4px 12px",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Mark{" "}
+                        {o.status === "pending"
+                          ? "Shipped"
+                          : o.status === "shipped"
+                          ? "Delivered"
+                          : "Done"}
+                      </button>
+                    ) : (
+                      <span style={{ color: "var(--color-success)" }}>
+                        Complete
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
             {!orders.length && !loading && (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={9}
                   style={{
                     textAlign: "center",
                     color: "var(--color-danger)",
