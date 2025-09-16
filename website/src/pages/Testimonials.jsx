@@ -8,6 +8,7 @@ const Testimonials = () => {
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
+  const [rating, setRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const { user } = useContext(AuthContext);
@@ -33,11 +34,13 @@ const Testimonials = () => {
         userId: user?.id,
         imageFile,
         videoFile,
+        rating,
       });
       setTestimonials((prev) => [created, ...prev]);
       setContent("");
       setImageFile(null);
       setVideoFile(null);
+      setRating(0);
       if (imageInputRef.current) imageInputRef.current.value = "";
       if (videoInputRef.current) videoInputRef.current.value = "";
     } catch (err) {
@@ -61,6 +64,45 @@ const Testimonials = () => {
               unboxing or tasting moment.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-yellow-50 mb-2">
+                  Your rating
+                </label>
+                <div
+                  role="radiogroup"
+                  aria-label="Rating"
+                  className="flex items-center gap-2"
+                >
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      aria-pressed={rating === i}
+                      aria-label={`${i} star${i > 1 ? "s" : ""}`}
+                      title={`${i} star${i > 1 ? "s" : ""}`}
+                      onClick={() => setRating(i)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setRating(i);
+                        }
+                      }}
+                      className={`p-1 rounded ${
+                        rating >= i ? "text-yellow-400" : "text-yellow-200"
+                      } hover:text-yellow-400 focus:outline-none`}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.955a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.955c.3.921-.755 1.688-1.54 1.118L10 13.347l-3.487 2.674c-.784.57-1.839-.197-1.54-1.118l1.287-3.955a1 1 0 00-.364-1.118L2.526 9.382c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.955z" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div>
                 <textarea
                   value={content}

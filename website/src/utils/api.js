@@ -31,9 +31,11 @@ export async function submitTestimonial({
   userId,
   imageFile,
   videoFile,
+  rating,
 }) {
   const form = new FormData();
   form.append("content", content);
+  if (rating) form.append("rating", rating);
   if (userId) form.append("userId", userId);
   if (imageFile) form.append("image", imageFile);
   if (videoFile) form.append("video", videoFile);

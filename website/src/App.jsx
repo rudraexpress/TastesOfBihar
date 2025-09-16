@@ -13,6 +13,7 @@ import OrderHistory from "./pages/OrderHistory";
 import Testimonials from "./pages/Testimonials";
 import AboutUs from "./pages/AboutUs";
 import TermsAndConditions from "./pages/TermsAndConditions";
+import ContactUs from "./pages/ContactUs";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -29,6 +30,7 @@ function App() {
         <Route path="/orders" element={<OrderHistory />} />
         <Route path="/testimonials" element={<Testimonials />} />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/contact" element={<ContactUs />} />
         <Route path="/terms" element={<TermsAndConditions />} />
       </Routes>
       <Footer />

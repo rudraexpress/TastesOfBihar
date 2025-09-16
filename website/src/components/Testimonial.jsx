@@ -38,6 +38,24 @@ const Testimonial = ({ testimonial }) => {
             </span>
           </div>
         </header>
+        {testimonial.rating ? (
+          <div className="flex items-center gap-1" aria-hidden>
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <svg
+                key={idx}
+                className={`w-4 h-4 ${
+                  idx < testimonial.rating
+                    ? "text-yellow-400"
+                    : "text-yellow-200"
+                }`}
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.955a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.955c.3.921-.755 1.688-1.54 1.118L10 13.347l-3.487 2.674c-.784.57-1.839-.197-1.54-1.118l1.287-3.955a1 1 0 00-.364-1.118L2.526 9.382c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.955z" />
+              </svg>
+            ))}
+          </div>
+        ) : null}
         <p className="text-sm leading-relaxed text-gray-800">
           “{testimonial.content}”
         </p>
