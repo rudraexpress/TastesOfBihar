@@ -14,26 +14,40 @@ import Testimonials from "./pages/Testimonials";
 import AboutUs from "./pages/AboutUs";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import ContactUs from "./pages/ContactUs";
+import Blogs from "./pages/Blogs";
+import BlogPost from "./pages/BlogPost";
+import AdminBlogs from "./pages/Admin/Blogs";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
 function App() {
   return (
     <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/product/:id" element={<Product />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/orders" element={<OrderHistory />} />
-        <Route path="/testimonials" element={<Testimonials />} />
-        <Route path="/about" element={<AboutUs />} />
-        <Route path="/contact" element={<ContactUs />} />
-        <Route path="/terms" element={<TermsAndConditions />} />
-      </Routes>
-      <Footer />
+      {/* Full-height flex layout to push footer to bottom on short pages */}
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/product/:id" element={<Product />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/admin"
+              element={<Navigate to="/admin/login" replace />}
+            />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/orders" element={<OrderHistory />} />
+            <Route path="/testimonials" element={<Testimonials />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/blog" element={<Blogs />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/admin/blogs" element={<AdminBlogs />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </Router>
   );
 }

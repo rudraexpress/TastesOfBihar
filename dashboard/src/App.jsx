@@ -9,6 +9,7 @@ import Orders from "./pages/Orders";
 import Analytics from "./pages/Analytics";
 import Inventory from "./pages/Inventory";
 import Accounts from "./pages/Accounts";
+import Blogs from "./pages/Blogs";
 
 export default function App() {
   const [active, setActive] = useState("dashboard");
@@ -48,6 +49,7 @@ export default function App() {
         {active === "orders" && <Orders />}
         {active === "analytics" && <Analytics />}
         {active === "inventory" && <Inventory />}
+        {active === "blogs" && <Blogs />}
         {active === "accounts" && <Accounts />}
         {active === "messages" && (
           <SimplePage title="Support">

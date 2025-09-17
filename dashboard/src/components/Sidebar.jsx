@@ -10,6 +10,7 @@ const links = [
   { id: "accounts", icon: "account_balance", label: "Accounts" },
   { id: "messages", icon: "mail_outline", label: "Messages", badge: 26 },
   { id: "products", icon: "inventory", label: "Products" },
+  { id: "blogs", icon: "article", label: "Blogs" },
   { id: "reports", icon: "report_gmailerrorred", label: "Reports" },
   { id: "settings", icon: "settings", label: "Settings" },
   { id: "logout", icon: "logout", label: "Logout" },

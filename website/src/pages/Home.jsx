@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { fetchProducts } from "../utils/api";
 import ProductCard from "../components/ProductCard";
+import Services from "../components/Services";
 import InfiniteMovingCards from "../components/InfiniteMovingCards";
 import heroLocal from "../assets/product-images/HeroBG.mp4";
 import productImg from "../assets/product-images/Logo.png";
@@ -143,6 +144,8 @@ const Home = () => {
       </section>
 
       <main className="container mx-auto py-12 px-4">
+        <Services />
+
         <h2 className="text-2xl font-bold mb-6 text-center" id="products">
           Featured Products
         </h2>
