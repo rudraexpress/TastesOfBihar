@@ -39,6 +39,11 @@ export default function App() {
     setTimeout(() => setProductModalRequest((c) => c + 1), 0);
   };
 
+  // Expand right bar by default on Dashboard, collapse on other pages
+  useEffect(() => {
+    setRightCollapsed(active !== "dashboard");
+  }, [active]);
+
   return (
     <div className={`container ${rightCollapsed ? "right-collapsed" : ""}`}>
       <Sidebar active={active} onChange={setActive} />
